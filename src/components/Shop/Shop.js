@@ -1,4 +1,8 @@
+/* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from "react";
+import useProducts from "../../hooks/useProducts";
+import { addToDb, getStoredCart } from "../../utilities/fakedb2";
+import Cart from "../Cart/Cart";
 import Product from "../Product/Product";
 import './Shop.css';
 
@@ -6,19 +10,34 @@ import './Shop.css';
 
 const Products = () => {
 
-    const [products, setProducts] = useState([])
+    const [products, setProducts] = useProducts([]);
 
     const [cart, setCart] = useState([])
 
+    // useEffect( () => {
+    //     fetch('products.json')
+    //     .then(res => res.json())
+    //     .then(data => setProducts(data))
+    // }, [])
+
     useEffect( () => {
-        fetch('products.json')
-        .then(res => res.json())
-        .then(data => setProducts(data))
-    }, [])
+        const storedCart = getStoredCart();
+        const savedCart = [];
+        for (const id in storedCart) {
+            const addedProduct = products.find(product => product.id === id)
+            if (addedProduct) {
+                const quantity = storedCart[id];
+                addedProduct.quantity = quantity;
+                savedCart.push(addedProduct)
+            }
+        }
+        setCart(savedCart);
+    },[products])
 
     const handleAddToCart = (product) => {
         const newCart = [...cart, product];
         setCart(newCart);
+        addToDb(product.id);
     }
 
   return (
@@ -33,9 +52,8 @@ const Products = () => {
             }
         </div>
 
-        <div>
-            <h2>Summery Section</h2>
-            <h4>Selected Items: {cart.length}</h4>
+        <div className="cart-container">
+            <Cart cart={cart}></Cart>
         </div>
     </div>
   );
